@@ -1,0 +1,66 @@
+import numpy as np
+import pandas as pd
+
+# dataset file path
+file_path = r'C:\Users\Jerry\Desktop\PhD Docs\Post-Field\AutoML Dataset'
+
+# Load the .npy dataset
+X_train = np.load(file_path + '\SVHN\X_train.npy')
+X_test = np.load(file_path + '\SVHN\X_test.npy')
+y_train = np.load(file_path + '\SVHN\y_train.npy')
+y_test = np.load(file_path + '\SVHN\y_test.npy')
+
+# Reshape X_train and X_test from (32, 32, 3, number_of_images) to (number_of_images, 32, 32, 3)
+X_train = np.transpose(X_train, (3, 0, 1, 2))
+X_test = np.transpose(X_test, (3, 0, 1, 2))
+
+
+# Select 10 samples from the training and test datasets
+num_train_samples = 300
+num_test_samples = 100
+X_train_subset = X_train[:num_train_samples, :, :, :]
+X_test_subset = X_test[:num_test_samples, :, :, :]
+y_train_subset = y_train[:num_train_samples]
+y_test_subset = y_test[:num_test_samples]
+
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+
+# Define the AlexNet architecture
+def create_alexnet():
+    model = models.Sequential([
+        # Convolutional layers
+        layers.Conv2D(96, (11, 11), strides=(4, 4), activation='relu', input_shape=(32, 32, 3)),
+        layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),  # Adjusted pool size and stride
+        layers.Conv2D(256, (5, 5), padding='same', activation='relu'),
+        layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),  # Adjusted pool size and stride
+        layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
+        layers.Conv2D(384, (3, 3), padding='same', activation='relu'),
+        layers.Conv2D(256, (3, 3), padding='same', activation='relu'),
+        layers.MaxPooling2D(pool_size=(1, 1), strides=(1, 1)),  # Adjusted pool size and stride
+        # Flatten the output of the convolutional layers
+        layers.Flatten(),
+        # Fully connected layers
+        layers.Dense(4096, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(4096, activation='relu'),
+        layers.Dropout(0.5),
+        layers.Dense(10, activation='softmax')  # Output layer with softmax activation for 10 classes
+    ])
+    return model
+
+# Create the model
+alexnet_model = create_alexnet()
+
+# Compile the model
+alexnet_model.compile(optimizer='adam',
+                      loss='sparse_categorical_crossentropy',
+                      metrics=['accuracy'])
+
+# Train the model
+alexnet_model.fit(X_train_subset, y_train_subset, epochs=10, validation_data=(X_test_subset, y_test_subset))
+
+# Evaluate the model
+test_loss, test_acc = alexnet_model.evaluate(X_test_subset, y_test_subset)
+print('Test accuracy:', test_acc)
