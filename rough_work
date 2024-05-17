@@ -64,3 +64,41 @@ alexnet_model.fit(X_train_subset, y_train_subset, epochs=10, validation_data=(X_
 # Evaluate the model
 test_loss, test_acc = alexnet_model.evaluate(X_test_subset, y_test_subset)
 print('Test accuracy:', test_acc)
+
+
+
+############################ MNIST#####################################################
+import struct
+import numpy as np
+
+def load_mnist_images(filename):
+    with open(filename, 'rb') as f:
+        # Read the magic number and dimensions
+        magic, num_images, rows, cols = struct.unpack('>IIII', f.read(16))
+        
+        # Read the image data
+        images = np.frombuffer(f.read(), dtype=np.uint8)
+        images = images.reshape(num_images, rows, cols)
+        
+    return images
+
+def load_mnist_labels(filename):
+    with open(filename, 'rb') as f:
+        # Read the magic number and the number of labels
+        magic, num_labels = struct.unpack('>II', f.read(8))
+        
+        # Read the label data
+        labels = np.frombuffer(f.read(), dtype=np.uint8)
+        
+    return labels
+
+
+X_train = file_path + r'\MNIST\train-images.idx3-ubyte'
+y_train = file_path + r'\MNIST\train-labels.idx1-ubyte'
+X_test = file_path + r'\MNIST\t10k-images.idx3-ubyte'
+y_test = file_path + r'\MNIST\t10k-labels.idx1-ubyte'
+
+X_train = load_mnist_images(X_train)
+y_train = load_mnist_labels(y_train)
+X_test = load_mnist_images(X_test)
+y_test = load_mnist_labels(y_test)
